@@ -1,0 +1,39 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.aab_
+*.dex
+*.class
+bin/
+gen/
+out/
+
+# Proguard
+proguard/
+*.mapping
+
+# Keystore
+*.jks
+*.keystore
+*.keystore.properties
+
+# Google Services
+/google-services.json
+
+# OS files
+Thumbs.db
+*.swp
+*.swo
+*~
