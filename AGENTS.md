@@ -1,5 +1,7 @@
 # CameraX Implementation Guide (CameraOCR)
 
+> Architecture & feature plan: [`docs/architecture.md`](./docs/architecture.md)
+
 ## Architecture Pattern
 - **MVVM with Jetpack Compose**: `CameraPreviewViewModel` holds all camera state and business logic; UI composables observe `StateFlow` via `collectAsStateWithLifecycle()`.
 - Camera lifecycle is bound to the composable's `LifecycleOwner` — auto start/stop.
