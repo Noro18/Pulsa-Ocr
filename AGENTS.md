@@ -15,9 +15,10 @@ app/src/main/java/com/example/cameraocr/
 ├── MainActivity.kt              # Entry point + permission handling composable
 └── ui/
     ├── screens/
-    │   ├── CameraPreviewContent.kt    # Camera preview + capture button UI
-    │   ├── CameraPreviewViewModel.kt  # CameraX setup, binding, photo capture logic
-    │   └── ImagePreviewScreen.kt      # Shows captured photo full-screen
+    │   ├── CameraPreviewContent.kt    # Camera preview + overlay + capture button UI
+    │   ├── CameraPreviewViewModel.kt  # CameraX setup, binding, photo capture, OCR logic
+    │   ├── ImagePreviewScreen.kt      # Shows captured photo full-screen + OCR result
+    │   └── OverlayBox.kt              # Draggable/resizable selection rectangle
     └── theme/                         # Material 3 theme files
 ```
 
@@ -27,9 +28,10 @@ app/src/main/java/com/example/cameraocr/
 
 ```toml
 [versions]
-camerax = "1.5.9-alpha06"
+camerax = "1.6.1"
 accompanist = "0.37.2"
-lifecycleRuntimeKtx = "2.10.0"
+lifecycleRuntimeKtx = "2.8.7"
+mlkitTextRecognition = "16.0.1"
 
 [libraries]
 androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
@@ -39,6 +41,7 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition-bundled", version.ref = "mlkitTextRecognition" }
 ```
 
 In `app/build.gradle.kts`:
@@ -50,6 +53,7 @@ implementation(libs.androidx.camera.camera2)
 implementation(libs.accompanist.permissions)
 implementation(libs.androidx.lifecycle.viewmodel.compose)
 implementation(libs.androidx.lifecycle.runtime.compose)
+implementation(libs.mlkit.text.recognition)
 ```
 
 ---

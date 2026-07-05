@@ -93,13 +93,15 @@ fun extractText(context: Context)
 mlkitTextRecognition = "16.0.1"
 
 [libraries]
-mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition-bundled", version.ref = "mlkitTextRecognition" }
 ```
 
 ```kotlin
 // app/build.gradle.kts
 implementation(libs.mlkit.text.recognition)
 ```
+
+> Uses `text-recognition-bundled` — model is packed in the APK (~5MB). No download needed, works offline immediately from first use. Chosen over the default unbundled variant because users may have slow internet (e.g. 90 KBPS).
 
 ---
 
