@@ -52,6 +52,7 @@ fun CameraPreviewContent(
     val context = LocalContext.current
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val capturedImage by viewModel.capturedImage.collectAsStateWithLifecycle()
+    val overlayRect by viewModel.overlayRect.collectAsStateWithLifecycle()
 
     LaunchedEffect(lifecycleOwner) {
         viewModel.bindToCamera(context.applicationContext, lifecycleOwner)
@@ -65,6 +66,7 @@ fun CameraPreviewContent(
                 surfaceRequest = request,
                 modifier = Modifier.fillMaxSize()
             )
+            OverlayBox(rect = overlayRect)
             Button(
                 onClick = { viewModel.takePhoto(context) },
                 modifier = Modifier
