@@ -35,7 +35,7 @@ class CameraPreviewViewModel : ViewModel() {
     private val _capturedImage = MutableStateFlow<Bitmap?>(null)
     val capturedImage: StateFlow<Bitmap?> = _capturedImage
 
-    private val _overlayRect = MutableStateFlow(RectF(0.1f, 0.3f, 0.9f, 0.7f))
+    private val _overlayRect = MutableStateFlow(RectF(0.1f, 0.4f, 0.9f, 0.6f))
     val overlayRect: StateFlow<RectF> = _overlayRect
 
     private val cameraPreviewUseCase = Preview.Builder().build().apply {

@@ -36,7 +36,7 @@ fun OverlayBox(
         drawRect(color = BracketColor, topLeft = Offset(l, t), size = Size(3f, gap))
 
         drawRect(color = BracketColor, topLeft = Offset(r - gap, t), size = Size(gap, 3f))
-        drawRect(color = BracketColor, topLeft = Offset(r - 3f, t), size = Size(3f, gap))
+        drawRect(color = BracketColor, topLeft = Offset(r - 3f, 2t), size = Size(3f, gap))
 
         drawRect(color = BracketColor, topLeft = Offset(l, b - 3f), size = Size(gap, 3f))
         drawRect(color = BracketColor, topLeft = Offset(l, b - gap), size = Size(3f, gap))
