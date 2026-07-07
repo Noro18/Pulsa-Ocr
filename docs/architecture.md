@@ -1,7 +1,7 @@
 # OCR Overlay Architecture
 
 ## Feature Overview
-Capture a photo from the camera preview, select a region of interest (ROI) via a draggable/resizable overlay box, then run ML Kit OCR on the cropped area to extract numbers.
+Capture a photo from the camera preview framed by a fixed guide box, then run ML Kit OCR on the cropped area to extract numbers.
 
 ---
 
@@ -12,7 +12,7 @@ CameraPreviewContent
 │
 ├─ CameraXViewfinder (live feed, fullscreen)
 ├─ OverlayBox composable
-│   └─ Draggable/resizable Rect drawn on top of preview
+│   └─ Fixed guide box (corner brackets + scrim) on top of preview
 ├─ Button("Capture")
 │   └─ → takePhoto() → ImageProxy → Bitmap (full frame)
 │
@@ -36,11 +36,10 @@ ImagePreviewScreen
 CameraPreviewViewModel
 ├─ surfaceRequest: StateFlow<SurfaceRequest?>          # CameraX preview surface
 ├─ capturedImage: StateFlow<Bitmap?>                   # Full captured frame
-├─ overlayRect: StateFlow<RectF?>                      # ROI position on preview
+├─ overlayRect: StateFlow<RectF>                       # Fixed guide box position (normalized)
 ├─ ocrText: StateFlow<String?>                         # Extracted OCR result
 │
 ├─ fun takePhoto()         → sets capturedImage
-├─ fun updateOverlayRect() → sets overlayRect
 ├─ fun extractText()       → runs ML Kit OCR on cropped bitmap → sets ocrText
 ├─ fun clearCapturedImage()→ resets capturedImage & ocrText
 ```
@@ -50,16 +49,16 @@ CameraPreviewViewModel
 ## OverlayBox Composable
 
 ```
-OverlayBox(modifier, rect: RectF, onRectChanged: (RectF) -> Unit)
+OverlayBox(modifier, rect: RectF)
 │
-└─ Box(Modifier.fillMaxSize())
-   ├─ DrawRect (semi-transparent dim outside + border on rect)
-   ├─ 4 corner handles (draggable circles)
-   └─ pointerInput / detectDragGestures to resize/move
+└─ Canvas(Modifier.fillMaxSize())
+   ├─ Draw scrim (semi-transparent dim outside the rect)
+   └─ Draw 4 corner brackets (cyan L-shapes) at each corner
 ```
 
 Constraints:
 - `rect` is normalized (0f..1f) relative to preview dimensions
+- No gesture handling — static visual guide (QR-scanner style)
 - On capture, scale to actual Bitmap dimensions before cropping
 
 ---
@@ -93,7 +92,7 @@ fun extractText(context: Context)
 mlkitTextRecognition = "16.0.1"
 
 [libraries]
-mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition-bundled", version.ref = "mlkitTextRecognition" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 ```
 
 ```kotlin
@@ -101,7 +100,7 @@ mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition-
 implementation(libs.mlkit.text.recognition)
 ```
 
-> Uses `text-recognition-bundled` — model is packed in the APK (~5MB). No download needed, works offline immediately from first use. Chosen over the default unbundled variant because users may have slow internet (e.g. 90 KBPS).
+> Uses `text-recognition` — model is packed in the APK (~5MB). No download needed, works offline immediately from first use. Chosen over the default unbundled variant because users may have slow internet (e.g. 90 KBPS).
 
 ---
 
@@ -111,7 +110,7 @@ implementation(libs.mlkit.text.recognition)
 |------|--------|
 | `gradle/libs.versions.toml` | Add `mlkitTextRecognition` version + library entry |
 | `app/build.gradle.kts` | Add `implementation(libs.mlkit.text.recognition)` |
-| `ui/screens/CameraPreviewViewModel.kt` | Add `overlayRect`, `ocrText` StateFlows + `updateOverlayRect()`, `extractText()` |
+| `ui/screens/CameraPreviewViewModel.kt` | Add `overlayRect` StateFlow |
 | `ui/screens/CameraPreviewContent.kt` | Add `OverlayBox` on top of `CameraXViewfinder` |
 | `ui/screens/ImagePreviewScreen.kt` | Add overlay rect display + "Extract Numbers" button + OCR text result |
-| `ui/screens/OverlayBox.kt` | **New** — draggable/resizable selection rectangle composable |
+| `ui/screens/OverlayBox.kt` | **New** — fixed guide box with corner brackets (QR-scanner style) |

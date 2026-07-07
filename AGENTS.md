@@ -1,4 +1,4 @@
-# CameraX Implementation Guide (CameraOCR)
+# CameraX Implementation Guide (PulsaOcr)
 
 > Architecture & feature plan: [`docs/architecture.md`](./docs/architecture.md)
 
@@ -11,14 +11,14 @@
 ## Project Structure
 
 ```
-app/src/main/java/com/example/cameraocr/
+app/src/main/java/com/example/pulsaocr/
 ├── MainActivity.kt              # Entry point + permission handling composable
 └── ui/
     ├── screens/
     │   ├── CameraPreviewContent.kt    # Camera preview + overlay + capture button UI
     │   ├── CameraPreviewViewModel.kt  # CameraX setup, binding, photo capture, OCR logic
     │   ├── ImagePreviewScreen.kt      # Shows captured photo full-screen + OCR result
-    │   └── OverlayBox.kt              # Draggable/resizable selection rectangle
+    │   └── OverlayBox.kt              # Fixed guide box with corner brackets (QR-scanner style)
     └── theme/                         # Material 3 theme files
 ```
 
@@ -41,7 +41,7 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
-mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition-bundled", version.ref = "mlkitTextRecognition" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 ```
 
 In `app/build.gradle.kts`:
@@ -111,6 +111,9 @@ val surfaceRequest: StateFlow<SurfaceRequest?> = _surfaceRequest
 
 private val _capturedImgage = MutableStateFlow<Bitmap?>(null)
 val capturedImage: StateFlow<Bitmap?> = _capturedImgage
+
+private val _overlayRect = MutableStateFlow(RectF(0.1f, 0.4f, 0.9f, 0.6f))
+val overlayRect: StateFlow<RectF> = _overlayRect
 ```
 
 ### Creating Use Cases (in constructor)
@@ -218,18 +221,18 @@ fun CameraPreviewContent(
     val context = LocalContext.current
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val capturedImage by viewModel.capturedImage.collectAsStateWithLifecycle()
+    val overlayRect by viewModel.overlayRect.collectAsStateWithLifecycle()
 
-    // Bind camera when lifecycle becomes active
     LaunchedEffect(lifecycleOwner) {
         viewModel.bindToCamera(context.applicationContext, lifecycleOwner)
     }
 
-    // Fork: show captured image OR live preview
     capturedImage?.let { bitmap ->
         ImagePreviewScreen(bitmap = bitmap, onBack = { viewModel.clearCapturedImage() })
     } ?: surfaceRequest?.let { request ->
         Box(modifier = Modifier.fillMaxSize()) {
             CameraXViewfinder(surfaceRequest = request, modifier = Modifier.fillMaxSize())
+            OverlayBox(rect = overlayRect)
             Button(
                 onClick = { viewModel.takePhoto(context) },
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp)
@@ -242,12 +245,32 @@ fun CameraPreviewContent(
 ```
 
 - `CameraXViewfinder` — Compose widget that renders the camera preview from a `SurfaceRequest`.
+- `OverlayBox` — Fixed guide box drawn on top of preview (QR-scanner style corner brackets).
 - `capturedImage` being non-null replaces the live preview with `ImagePreviewScreen`.
 - `clearCapturedImage()` resets `_capturedImgage` to `null`, returning to live preview.
 
 ---
 
-## 5. ImagePreviewScreen — Photo Review
+## 5. OverlayBox — Fixed Guide Box
+
+```kotlin
+@Composable
+fun OverlayBox(modifier: Modifier = Modifier, rect: RectF) {
+    Canvas(modifier = modifier.fillMaxSize()) {
+        // Draw scrim (semi-transparent) outside the selection area
+        // Draw cyan corner brackets (L-shapes) at each corner
+    }
+}
+```
+
+- `rect` is normalized (`0f..1f`) relative to preview dimensions
+- No gesture handling — acts as a static framing guide (QR-scanner style)
+- `rect` value is set in ViewModel and can be adjusted there
+- On capture, scale rect to actual Bitmap dimensions before cropping
+
+---
+
+## 6. ImagePreviewScreen — Photo Review
 
 ```kotlin
 @Composable
@@ -281,6 +304,7 @@ fun ImagePreviewScreen(bitmap: Bitmap, onBack: () -> Unit) {
 | Permission | Check + request at runtime | `rememberPermissionState`, `launchPermissionRequest()` |
 | Camera setup | Get provider, build use cases, bind to lifecycle | `ProcessCameraProvider.awaitInstance()`, `bindToLifecycle()` |
 | Live preview | SurfaceRequest → CameraXViewfinder | `Preview.setSurfaceProvider{}`, `CameraXViewfinder` |
+| Overlay guide | Draw scrim + corner brackets on preview | `Canvas`, `drawRect()`, `OverlayBox` |
 | Take photo | ImageCapture callback → ImageProxy → Bitmap | `ImageCapture.takePicture()`, `imageProxyToBitmap()` |
 | Show result | Bitmap → Image composable | `Image(bitmap.asImageBitmap())` |
 | Return to preview | Clear captured image state | `_capturedImgage.value = null` |
