@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.YuvImage
 import android.util.Log
 import androidx.camera.core.CameraSelector
@@ -34,6 +35,9 @@ class CameraPreviewViewModel : ViewModel() {
     private val _capturedImage = MutableStateFlow<Bitmap?>(null)
     val capturedImage: StateFlow<Bitmap?> = _capturedImage
 
+    private val _overlayRect = MutableStateFlow<RectF?>(null)
+    val overlayRect: StateFlow<RectF?> = _overlayRect
+
     private val cameraPreviewUseCase = Preview.Builder().build().apply {
         setSurfaceProvider { newSurfaceRequest ->
             _surfaceRequest.update { newSurfaceRequest }
@@ -59,6 +63,10 @@ class CameraPreviewViewModel : ViewModel() {
                 processCameraProvider.unbindAll()
             }
         }
+    }
+
+    fun updateOverlayRect(rect: RectF) {
+        _overlayRect.value = rect
     }
 
     fun takePhoto(context: Context) {
