@@ -9,8 +9,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
@@ -52,19 +56,39 @@ fun CameraPreviewContent(
     val context = LocalContext.current
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val capturedImage by viewModel.capturedImage.collectAsStateWithLifecycle()
+    val overlayRect by viewModel.overlayRect.collectAsStateWithLifecycle()
+
+    var previewWidth by remember { mutableIntStateOf(0) }
+    var previewHeight by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(lifecycleOwner) {
         viewModel.bindToCamera(context.applicationContext, lifecycleOwner)
     }
 
     capturedImage?.let { bitmap ->
-        ImagePreviewScreen(bitmap = bitmap, onBack = { viewModel.clearCapturedImage() })
+        ImagePreviewScreen(
+            bitmap = bitmap,
+            overlayRect = overlayRect,
+            onBack = { viewModel.clearCapturedImage() }
+        )
     } ?: surfaceRequest?.let { request ->
         Box(modifier = modifier.fillMaxSize()) {
             androidx.camera.compose.CameraXViewfinder(
                 surfaceRequest = request,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onSizeChanged { size ->
+                        previewWidth = size.width
+                        previewHeight = size.height
+                    }
             )
+            if (previewWidth > 0 && previewHeight > 0) {
+                OverlayBox(
+                    previewWidth = previewWidth,
+                    previewHeight = previewHeight,
+                    onRectChanged = { viewModel.updateOverlayRect(it) }
+                )
+            }
             Button(
                 onClick = { viewModel.takePhoto(context) },
                 modifier = Modifier

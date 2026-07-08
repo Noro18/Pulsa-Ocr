@@ -1,5 +1,13 @@
 # OCR Overlay Architecture
 
+## Status
+
+| Feature | Status |
+|---------|--------|
+| OverlayBox (centered, resizable) | ✅ Implemented |
+| Photo capture with overlay preservation | ✅ Implemented |
+| ML Kit OCR pipeline | 🔜 Planned — doc below |
+
 ## Feature Overview
 Capture a photo from the camera preview, select a region of interest (ROI) via a draggable/resizable overlay box, then run ML Kit OCR on the cropped area to extract numbers.
 
@@ -93,7 +101,7 @@ fun extractText(context: Context)
 mlkitTextRecognition = "16.0.1"
 
 [libraries]
-mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition-bundled", version.ref = "mlkitTextRecognition" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 ```
 
 ```kotlin
@@ -101,7 +109,7 @@ mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition-
 implementation(libs.mlkit.text.recognition)
 ```
 
-> Uses `text-recognition-bundled` — model is packed in the APK (~5MB). No download needed, works offline immediately from first use. Chosen over the default unbundled variant because users may have slow internet (e.g. 90 KBPS).
+> Uses `text-recognition` (bundled variant) — model is packed in the APK (~5MB). No download needed, works offline immediately from first use. Chosen over the unbundled Play Services variant because users may have slow internet (e.g. 90 KBPS).
 
 ---
 

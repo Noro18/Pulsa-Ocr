@@ -5,8 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.YuvImage
 import android.util.Log
+import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -34,13 +36,19 @@ class CameraPreviewViewModel : ViewModel() {
     private val _capturedImage = MutableStateFlow<Bitmap?>(null)
     val capturedImage: StateFlow<Bitmap?> = _capturedImage
 
-    private val cameraPreviewUseCase = Preview.Builder().build().apply {
+    private val _overlayRect = MutableStateFlow<RectF?>(null)
+    val overlayRect: StateFlow<RectF?> = _overlayRect
+
+    private val cameraPreviewUseCase = Preview.Builder()
+        .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+        .build().apply {
         setSurfaceProvider { newSurfaceRequest ->
             _surfaceRequest.update { newSurfaceRequest }
         }
     }
 
     private val cameraCaptureUseCase = ImageCapture.Builder()
+        .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .setTargetRotation(android.view.Surface.ROTATION_0)
         .build()
 
@@ -59,6 +67,10 @@ class CameraPreviewViewModel : ViewModel() {
                 processCameraProvider.unbindAll()
             }
         }
+    }
+
+    fun updateOverlayRect(rect: RectF) {
+        _overlayRect.value = rect
     }
 
     fun takePhoto(context: Context) {
