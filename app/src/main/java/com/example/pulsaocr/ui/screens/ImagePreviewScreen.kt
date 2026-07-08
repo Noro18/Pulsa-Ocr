@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -32,7 +33,7 @@ fun ImagePreviewScreen(
             bitmap = bitmap.asImageBitmap(),
             contentDescription = "Captured image",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds
+            contentScale = ContentScale.Crop
         )
 
         if (overlayRect != null) {
@@ -45,7 +46,7 @@ fun ImagePreviewScreen(
                 drawRect(
                     color = Color(0xFF1976D2).copy(alpha = 0.3f),
                     topLeft = Offset(left, top),
-                    size = androidx.compose.ui.geometry.Size(right - left, bottom - top),
+                    size = Size(right - left, bottom - top),
                     style = Stroke(width = 3.dp.toPx())
                 )
             }
