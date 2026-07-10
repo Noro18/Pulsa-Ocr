@@ -55,7 +55,7 @@ fun ImagePreviewScreen(
                 val bottom = offsetY + overlayRect.bottom * displayedHeight
 
                 drawRect(
-                    color = Color(0xFF1976D2).copy(alpha = 0.3f),
+                    color = Color.White.copy(alpha = 0.5f),
                     topLeft = Offset(left, top),
                     size = Size(right - left, bottom - top),
                     style = Stroke(width = 3.dp.toPx())
