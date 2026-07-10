@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,22 @@ fun OverlayBox(
     val density = LocalDensity.current
     val edgePx = with(density) { 20.dp.toPx() }
     val minPx = with(density) { 60.dp.toPx() }
+
+    // Emit the initial RectF so _overlayRect is never null, even if the user never drags
+    LaunchedEffect(previewWidth, previewHeight) {
+        if (previewWidth > 0 && previewHeight > 0) {
+            val left = (previewWidth - widthPx) / 2f
+            val top = (previewHeight - heightPx) / 2f
+            onRectChanged(
+                RectF(
+                    left / previewWidth,
+                    top / previewHeight,
+                    (left + widthPx) / previewWidth,
+                    (top + heightPx) / previewHeight
+                )
+            )
+        }
+    }
 
     Box(
         modifier = modifier
