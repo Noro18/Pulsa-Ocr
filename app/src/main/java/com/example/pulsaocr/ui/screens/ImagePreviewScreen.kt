@@ -33,7 +33,7 @@ fun ImagePreviewScreen(
             bitmap = bitmap.asImageBitmap(),
             contentDescription = "Captured image",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.Crop
         )
 
         if (overlayRect != null) {
@@ -42,7 +42,7 @@ fun ImagePreviewScreen(
 
             Canvas(modifier = Modifier.fillMaxSize()) {
                 // Calculate how ContentScale.Fit positions the image within the composable
-                val scale = minOf(size.width / bitmapWidth, size.height / bitmapHeight)
+                val scale = maxOf(size.width / bitmapWidth, size.height / bitmapHeight)
                 val displayedWidth = bitmapWidth * scale
                 val displayedHeight = bitmapHeight * scale
                 val offsetX = (size.width - displayedWidth) / 2f
