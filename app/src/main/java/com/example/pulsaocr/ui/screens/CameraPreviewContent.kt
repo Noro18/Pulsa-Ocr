@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +47,7 @@ fun CameraPreviewScreen(modifier: Modifier = Modifier) {
         }
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = message)
+
             Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
                 Text("Grant Camera Permission")
             }
