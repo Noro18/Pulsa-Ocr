@@ -70,7 +70,7 @@ fun OverlayBox(
                     val len = 22.dp.toPx()
                     val bracketWidth = 5.dp.toPx()
                     val r = bracketWidth / 2f
-                    val c = Color(0xFF1976D2)
+                    val c = Color.White
                     val cap = StrokeCap.Round
 
                     drawLine(c, Offset.Zero, Offset(len, 0f), bracketWidth, cap)
