@@ -37,11 +37,22 @@ fun ImagePreviewScreen(
         )
 
         if (overlayRect != null) {
+            val bitmapWidth = bitmap.width.toFloat()
+            val bitmapHeight = bitmap.height.toFloat()
+
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val left = overlayRect.left * size.width
-                val top = overlayRect.top * size.height
-                val right = overlayRect.right * size.width
-                val bottom = overlayRect.bottom * size.height
+                // Calculate how ContentScale.Fit positions the image within the composable
+                val scale = maxOf(size.width / bitmapWidth, size.height / bitmapHeight)
+                val displayedWidth = bitmapWidth * scale
+                val displayedHeight = bitmapHeight * scale
+                val offsetX = (size.width - displayedWidth) / 2f
+                val offsetY = (size.height - displayedHeight) / 2f
+
+                // Map the RectF proportions onto the actual displayed image area
+                val left = offsetX + overlayRect.left * displayedWidth
+                val top = offsetY + overlayRect.top * displayedHeight
+                val right = offsetX + overlayRect.right * displayedWidth
+                val bottom = offsetY + overlayRect.bottom * displayedHeight
 
                 drawRect(
                     color = Color(0xFF1976D2).copy(alpha = 0.3f),

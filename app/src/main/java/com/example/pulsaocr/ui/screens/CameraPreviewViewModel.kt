@@ -25,6 +25,9 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 
@@ -80,6 +83,9 @@ class CameraPreviewViewModel : ViewModel() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     _capturedImage.value = imageProxyToBitmap(image)
                     image.close()
+
+                    // Automatically trigger OCR right after capture
+                    processImageWithOcr()
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -91,6 +97,43 @@ class CameraPreviewViewModel : ViewModel() {
 
     fun clearCapturedImage() {
         _capturedImage.value = null
+    }
+
+    private fun processImageWithOcr() {
+        val fullBitmap = _capturedImage.value ?: return
+        val rectF = _overlayRect.value ?: return
+
+        // Convert RectF proportions (0.0–1.0) → actual pixel coordinates on the bitmap
+        val cropLeft = (rectF.left * fullBitmap.width).toInt().coerceAtLeast(0)
+        val cropTop = (rectF.top * fullBitmap.height).toInt().coerceAtLeast(0)
+        val cropWidth = (rectF.width() * fullBitmap.width).toInt()
+            .coerceAtMost(fullBitmap.width - cropLeft)
+        val cropHeight = (rectF.height() * fullBitmap.height).toInt()
+            .coerceAtMost(fullBitmap.height - cropTop)
+
+        if (cropWidth <= 0 || cropHeight <= 0) {
+            Log.e(TAG, "Invalid crop area: width=$cropWidth, height=$cropHeight")
+            return
+        }
+
+        val croppedBitmap = Bitmap.createBitmap(
+            fullBitmap, cropLeft, cropTop, cropWidth, cropHeight
+        )
+
+        val image = InputImage.fromBitmap(croppedBitmap, 0)
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                Log.d(TAG, "OCR Result: ${visionText.text}")
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "OCR failed", e)
+            }
+    }
+
+    companion object {
+        private const val TAG = "CameraOCR"
     }
 
     private fun imageProxyToBitmap(image: ImageProxy): Bitmap? {
