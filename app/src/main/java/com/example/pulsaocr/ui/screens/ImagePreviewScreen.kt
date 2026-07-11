@@ -136,12 +136,13 @@ fun ImagePreviewScreen(
                                         else isp.color.copy(alpha = 0.5f)
                                 )
                             ) {
-                                Text(
-                                    text = isp.label,
-                                    color = Color.White,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                            Text(
+                                text = isp.label,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1
+                            )
                             }
                         }
                     }
