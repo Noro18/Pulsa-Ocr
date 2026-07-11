@@ -203,33 +203,41 @@ fun ImagePreviewScreen(
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
-                }
 
-                val currentIsp = selectedIsp
-                if (currentIsp != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    val currentIsp = selectedIsp
+                    if (currentIsp != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    Button(
-                        onClick = {
-                            val dialCode = currentIsp.ussdFormat.format(ocrExtractedDigits)
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.fromParts("tel", dialCode, null)
-                            }
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50)
-                        )
-                    ) {
-                        Text(
-                            text = "Dial ${currentIsp.label}",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Button(
+                            onClick = {
+                                val dialCode = currentIsp.ussdFormat.format(ocrExtractedDigits)
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.fromParts("tel", dialCode, null)
+                                }
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF4CAF50)
+                            )
+                        ) {
+                            Text(
+                                text = "Dial ${currentIsp.label}",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
+                } else {
+                    Text(
+                        text = "No voucher code detected",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 16.sp,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
             }
         }
