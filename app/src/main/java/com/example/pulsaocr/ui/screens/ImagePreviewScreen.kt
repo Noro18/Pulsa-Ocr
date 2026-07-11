@@ -84,6 +84,12 @@ fun ImagePreviewScreen(
                 val right = offsetX + overlayRect.right * displayedWidth
                 val bottom = offsetY + overlayRect.bottom * displayedHeight
 
+                val dim = Color.Black.copy(alpha = 0.45f)
+                drawRect(dim, size = Size(size.width, top))
+                drawRect(dim, topLeft = Offset(0f, bottom), size = Size(size.width, size.height - bottom))
+                drawRect(dim, topLeft = Offset(0f, top), size = Size(left, bottom - top))
+                drawRect(dim, topLeft = Offset(right, top), size = Size(size.width - right, bottom - top))
+
                 drawRect(
                     color = Color.White.copy(alpha = 0.5f),
                     topLeft = Offset(left, top),
