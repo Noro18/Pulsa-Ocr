@@ -36,7 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -90,12 +90,27 @@ fun ImagePreviewScreen(
                 drawRect(dim, topLeft = Offset(0f, top), size = Size(left, bottom - top))
                 drawRect(dim, topLeft = Offset(right, top), size = Size(size.width - right, bottom - top))
 
-                drawRect(
-                    color = Color.White.copy(alpha = 0.5f),
-                    topLeft = Offset(left, top),
-                    size = Size(right - left, bottom - top),
-                    style = Stroke(width = 3.dp.toPx())
-                )
+                val bracketLen = 22.dp.toPx()
+                val bracketW = 5.dp.toPx()
+                val r = bracketW / 2f
+                val c = Color.White.copy(alpha = 0.8f)
+                val cap = StrokeCap.Round
+
+                drawLine(c, Offset(left, top), Offset(left + bracketLen, top), bracketW, cap)
+                drawLine(c, Offset(left, top), Offset(left, top + bracketLen), bracketW, cap)
+                drawCircle(c, r, Offset(left, top))
+
+                drawLine(c, Offset(right, top), Offset(right - bracketLen, top), bracketW, cap)
+                drawLine(c, Offset(right, top), Offset(right, top + bracketLen), bracketW, cap)
+                drawCircle(c, r, Offset(right, top))
+
+                drawLine(c, Offset(left, bottom), Offset(left + bracketLen, bottom), bracketW, cap)
+                drawLine(c, Offset(left, bottom), Offset(left, bottom - bracketLen), bracketW, cap)
+                drawCircle(c, r, Offset(left, bottom))
+
+                drawLine(c, Offset(right, bottom), Offset(right - bracketLen, bottom), bracketW, cap)
+                drawLine(c, Offset(right, bottom), Offset(right, bottom - bracketLen), bracketW, cap)
+                drawCircle(c, r, Offset(right, bottom))
             }
         }
 
