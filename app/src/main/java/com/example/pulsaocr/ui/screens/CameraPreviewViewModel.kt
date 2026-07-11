@@ -42,6 +42,12 @@ class CameraPreviewViewModel : ViewModel() {
     private val _overlayRect = MutableStateFlow<RectF?>(null)
     val overlayRect: StateFlow<RectF?> = _overlayRect
 
+    private val _ocrRawText = MutableStateFlow<String?>(null)
+    val ocrRawText: StateFlow<String?> = _ocrRawText
+
+    private val _ocrExtractedDigits = MutableStateFlow<String?>(null)
+    val ocrExtractedDigits: StateFlow<String?> = _ocrExtractedDigits
+
     private val cameraPreviewUseCase = Preview.Builder()
         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .build().apply {
@@ -111,6 +117,8 @@ class CameraPreviewViewModel : ViewModel() {
 
     fun clearCapturedImage() {
         _capturedImage.value = null
+        _ocrRawText.value = null
+        _ocrExtractedDigits.value = null
     }
 
     private fun processImageWithOcr() {
@@ -139,7 +147,15 @@ class CameraPreviewViewModel : ViewModel() {
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
-                Log.d(TAG, "OCR Result: ${visionText.text}")
+                val rawText = visionText.text
+                Log.d(TAG, "OCR Result: $rawText")
+                _ocrRawText.value = rawText
+
+                val voucherCode = Regex("""\d{8,}""")
+                    .findAll(rawText.replace("\\s".toRegex(), ""))
+                    .maxByOrNull { it.value.length }
+                    ?.value
+                _ocrExtractedDigits.value = voucherCode
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "OCR failed", e)

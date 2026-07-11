@@ -66,6 +66,8 @@ fun CameraPreviewContent(
     val surfaceRequest by viewModel.surfaceRequest.collectAsStateWithLifecycle()
     val capturedImage by viewModel.capturedImage.collectAsStateWithLifecycle()
     val overlayRect by viewModel.overlayRect.collectAsStateWithLifecycle()
+    val ocrRawText by viewModel.ocrRawText.collectAsStateWithLifecycle()
+    val ocrExtractedDigits by viewModel.ocrExtractedDigits.collectAsStateWithLifecycle()
 
     var previewWidth by remember { mutableIntStateOf(0) }
     var previewHeight by remember { mutableIntStateOf(0) }
@@ -82,6 +84,8 @@ fun CameraPreviewContent(
         ImagePreviewScreen(
             bitmap = bitmap,
             overlayRect = overlayRect,
+            ocrRawText = ocrRawText,
+            ocrExtractedDigits = ocrExtractedDigits,
             onBack = { viewModel.clearCapturedImage() }
         )
     } ?: surfaceRequest?.let { request ->
