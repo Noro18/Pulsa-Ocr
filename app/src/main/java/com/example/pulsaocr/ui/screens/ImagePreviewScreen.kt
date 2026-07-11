@@ -25,6 +25,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +41,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +62,15 @@ fun ImagePreviewScreen(
     onBack: () -> Unit
 ) {
     var selectedIsp by remember { mutableStateOf<Isp?>(null) }
+    var showControls by remember { mutableStateOf(false) }
+    val boxPulse = remember { Animatable(1f) }
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        boxPulse.animateTo(1.12f, tween(300))
+        boxPulse.animateTo(1f, tween(300))
+        showControls = true
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -84,33 +96,29 @@ fun ImagePreviewScreen(
                 val right = offsetX + overlayRect.right * displayedWidth
                 val bottom = offsetY + overlayRect.bottom * displayedHeight
 
+                // Pulse the rect from center
+                val cx = (left + right) / 2f
+                val cy = (top + bottom) / 2f
+                val halfW = (right - left) / 2f * boxPulse.value
+                val halfH = (bottom - top) / 2f * boxPulse.value
+                val pl = cx - halfW
+                val pt = cy - halfH
+                val pr = cx + halfW
+                val pb = cy + halfH
+
                 val dim = Color.Black.copy(alpha = 0.45f)
-                drawRect(dim, size = Size(size.width, top))
-                drawRect(dim, topLeft = Offset(0f, bottom), size = Size(size.width, size.height - bottom))
-                drawRect(dim, topLeft = Offset(0f, top), size = Size(left, bottom - top))
-                drawRect(dim, topLeft = Offset(right, top), size = Size(size.width - right, bottom - top))
+                drawRect(dim, size = Size(size.width, pt))
+                drawRect(dim, topLeft = Offset(0f, pb), size = Size(size.width, size.height - pb))
+                drawRect(dim, topLeft = Offset(0f, pt), size = Size(pl, pb - pt))
+                drawRect(dim, topLeft = Offset(pr, pt), size = Size(size.width - pr, pb - pt))
 
                 val bracketLen = 22.dp.toPx()
                 val bracketW = 5.dp.toPx()
-                val r = bracketW / 2f
-                val c = Color.White.copy(alpha = 0.8f)
-                val cap = StrokeCap.Round
 
-                drawLine(c, Offset(left, top), Offset(left + bracketLen, top), bracketW, cap)
-                drawLine(c, Offset(left, top), Offset(left, top + bracketLen), bracketW, cap)
-                drawCircle(c, r, Offset(left, top))
-
-                drawLine(c, Offset(right, top), Offset(right - bracketLen, top), bracketW, cap)
-                drawLine(c, Offset(right, top), Offset(right, top + bracketLen), bracketW, cap)
-                drawCircle(c, r, Offset(right, top))
-
-                drawLine(c, Offset(left, bottom), Offset(left + bracketLen, bottom), bracketW, cap)
-                drawLine(c, Offset(left, bottom), Offset(left, bottom - bracketLen), bracketW, cap)
-                drawCircle(c, r, Offset(left, bottom))
-
-                drawLine(c, Offset(right, bottom), Offset(right - bracketLen, bottom), bracketW, cap)
-                drawLine(c, Offset(right, bottom), Offset(right, bottom - bracketLen), bracketW, cap)
-                drawCircle(c, r, Offset(right, bottom))
+                drawCornerBracket(Corner.TOP_LEFT, Offset(pl, pt), bracketLen, bracketW)
+                drawCornerBracket(Corner.TOP_RIGHT, Offset(pr, pt), bracketLen, bracketW)
+                drawCornerBracket(Corner.BOTTOM_LEFT, Offset(pl, pb), bracketLen, bracketW)
+                drawCornerBracket(Corner.BOTTOM_RIGHT, Offset(pr, pb), bracketLen, bracketW)
             }
         }
 
@@ -126,8 +134,13 @@ fun ImagePreviewScreen(
             )
         }
 
-        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
-            if (ocrExtractedDigits != null) {
+        AnimatedVisibility(
+            visible = showControls,
+            enter = slideInVertically { it },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            Column {
+                if (ocrExtractedDigits != null) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -218,5 +231,6 @@ fun ImagePreviewScreen(
                 }
             }
         }
+    }
     }
 }

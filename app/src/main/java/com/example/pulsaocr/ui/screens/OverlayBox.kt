@@ -15,8 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -66,25 +64,11 @@ fun OverlayBox(
                 .drawBehind {
                     val len = 22.dp.toPx()
                     val bracketWidth = 5.dp.toPx()
-                    val r = bracketWidth / 2f
-                    val c = Color.White
-                    val cap = StrokeCap.Round
 
-                    drawLine(c, Offset.Zero, Offset(len, 0f), bracketWidth, cap)
-                    drawLine(c, Offset.Zero, Offset(0f, len), bracketWidth, cap)
-                    drawCircle(c, r, Offset.Zero)
-
-                    drawLine(c, Offset(size.width, 0f), Offset(size.width - len, 0f), bracketWidth, cap)
-                    drawLine(c, Offset(size.width, 0f), Offset(size.width, len), bracketWidth, cap)
-                    drawCircle(c, r, Offset(size.width, 0f))
-
-                    drawLine(c, Offset(0f, size.height), Offset(len, size.height), bracketWidth, cap)
-                    drawLine(c, Offset(0f, size.height), Offset(0f, size.height - len), bracketWidth, cap)
-                    drawCircle(c, r, Offset(0f, size.height))
-
-                    drawLine(c, Offset(size.width, size.height), Offset(size.width - len, size.height), bracketWidth, cap)
-                    drawLine(c, Offset(size.width, size.height), Offset(size.width, size.height - len), bracketWidth, cap)
-                    drawCircle(c, r, Offset(size.width, size.height))
+                    drawCornerBracket(Corner.TOP_LEFT, Offset.Zero, len, bracketWidth)
+                    drawCornerBracket(Corner.TOP_RIGHT, Offset(size.width, 0f), len, bracketWidth)
+                    drawCornerBracket(Corner.BOTTOM_LEFT, Offset(0f, size.height), len, bracketWidth)
+                    drawCornerBracket(Corner.BOTTOM_RIGHT, Offset(size.width, size.height), len, bracketWidth)
                 }
                 .pointerInput(Unit) {
                     detectDragGestures(
