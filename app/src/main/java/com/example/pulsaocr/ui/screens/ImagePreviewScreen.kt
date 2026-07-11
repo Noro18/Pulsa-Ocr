@@ -157,11 +157,15 @@ fun ImagePreviewScreen(
                     .padding(16.dp)
             ) {
                 if (ocrExtractedDigits != null) {
+                    val displayText = selectedIsp?.let { it.ussdFormat.format(ocrExtractedDigits) }
+                        ?: ocrExtractedDigits
                     Text(
-                        text = ocrExtractedDigits,
+                        text = displayText,
                         color = Color.White,
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
 
