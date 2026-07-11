@@ -108,7 +108,7 @@ fun CameraPreviewContent(
                         .size(72.dp)
                         .clip(CircleShape)
                         .background(Color.White)
-                        .clickable { viewModel.takePhoto(context) },
+                                .clickable { viewModel.takePhoto(context, previewWidth, previewHeight) },
                     contentAlignment = Alignment.Center
                 ) {
                     Box(

@@ -76,13 +76,27 @@ class CameraPreviewViewModel : ViewModel() {
         _overlayRect.value = rect
     }
 
-    fun takePhoto(context: Context) {
+    fun takePhoto(context: Context, previewWidth: Int, previewHeight: Int) {
         cameraCaptureUseCase.takePicture(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    _capturedImage.value = imageProxyToBitmap(image)
+                    val bitmap = imageProxyToBitmap(image) ?: return
                     image.close()
+
+                    // Adjust overlay from screen-space to image-space coordinates
+                    val currentRect = _overlayRect.value
+                    if (currentRect != null) {
+                        _overlayRect.value = adjustOverlayToImageSpace(
+                            screenRect = currentRect,
+                            previewWidth = previewWidth,
+                            previewHeight = previewHeight,
+                            bitmapWidth = bitmap.width,
+                            bitmapHeight = bitmap.height
+                        )
+                    }
+
+                    _capturedImage.value = bitmap
 
                     // Automatically trigger OCR right after capture
                     processImageWithOcr()
@@ -130,6 +144,37 @@ class CameraPreviewViewModel : ViewModel() {
             .addOnFailureListener { e ->
                 Log.e(TAG, "OCR failed", e)
             }
+    }
+
+    private fun adjustOverlayToImageSpace(
+        screenRect: RectF,
+        previewWidth: Int,
+        previewHeight: Int,
+        bitmapWidth: Int,
+        bitmapHeight: Int
+    ): RectF {
+        val imageAspect = bitmapWidth.toFloat() / bitmapHeight
+        val screenAspect = previewWidth.toFloat() / previewHeight
+
+        return if (imageAspect > screenAspect) {
+            val visibleW = screenAspect / imageAspect
+            val xOff = (1f - visibleW) / 2f
+            RectF(
+                xOff + screenRect.left * visibleW,
+                screenRect.top,
+                xOff + screenRect.right * visibleW,
+                screenRect.bottom
+            )
+        } else {
+            val visibleH = imageAspect / screenAspect
+            val yOff = (1f - visibleH) / 2f
+            RectF(
+                screenRect.left,
+                yOff + screenRect.top * visibleH,
+                screenRect.right,
+                yOff + screenRect.bottom * visibleH
+            )
+        }
     }
 
     companion object {
