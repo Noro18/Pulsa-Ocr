@@ -1,7 +1,6 @@
 package com.example.pulsaocr.ui.screens
 
 import android.graphics.RectF
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,9 +57,7 @@ fun OverlayBox(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.35f)),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Box(
