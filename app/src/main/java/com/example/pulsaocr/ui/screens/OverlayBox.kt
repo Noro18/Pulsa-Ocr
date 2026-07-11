@@ -1,7 +1,7 @@
 package com.example.pulsaocr.ui.screens
 
 import android.graphics.RectF
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -58,11 +59,23 @@ fun OverlayBox(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.35f)),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val cx = (size.width - widthPx) / 2f
+            val cy = (size.height - heightPx) / 2f
+            val dim = Color.Black.copy(alpha = 0.45f)
+
+            drawRect(dim, size = Size(size.width, cy))
+            drawRect(dim, topLeft = Offset(0f, cy + heightPx),
+                size = Size(size.width, size.height - cy - heightPx))
+            drawRect(dim, topLeft = Offset(0f, cy),
+                size = Size(cx, heightPx))
+            drawRect(dim, topLeft = Offset(cx + widthPx, cy),
+                size = Size(size.width - cx - widthPx, heightPx))
+        }
+
         Box(
             modifier = Modifier
                 .size(with(density) { widthPx.toDp() }, with(density) { heightPx.toDp() })
