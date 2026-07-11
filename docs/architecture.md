@@ -6,10 +6,11 @@
 |---------|--------|
 | OverlayBox (centered, resizable) | ✅ Implemented |
 | Photo capture with overlay preservation | ✅ Implemented |
-| ML Kit OCR pipeline | 🔜 Planned — doc below |
+| ML Kit OCR pipeline | ✅ Implemented |
+| Regex digit extraction (voucher code) | ✅ Implemented |
 
 ## Feature Overview
-Capture a photo from the camera preview, select a region of interest (ROI) via a draggable/resizable overlay box, then run ML Kit OCR on the cropped area to extract numbers.
+Capture a photo from the camera preview, select a region of interest (ROI) via a draggable/resizable overlay box, then run ML Kit OCR on the cropped area and extract the voucher number by filtering out non-digit garbage via regex.
 
 ---
 
@@ -23,17 +24,16 @@ CameraPreviewContent
 │   └─ Draggable/resizable Rect drawn on top of preview
 ├─ Button("Capture")
 │   └─ → takePhoto() → ImageProxy → Bitmap (full frame)
+│                     → crop bitmap to overlay rect
+│                     → processImageWithOcr() ← automatic, no extra button
 │
 ImagePreviewScreen
 │
 ├─ Show full captured Bitmap
-├─ OverlayBox (same position, visible)
-├─ Button("Extract Numbers")
-│   └─ → crop Bitmap to overlay rect
-│      → InputImage.fromBitmap(cropped)
-│      → TextRecognition.getClient().process(image)
-│      → emit ocrText via StateFlow
-│      → show result in a Text composable
+├─ OverlayRect outline (same position, visible)
+├─ Extracted voucher code (large, bold, white)
+├─ Raw OCR text (smaller, dimmed, below)
+└─ Back button (top-left)
 ```
 
 ---
@@ -42,15 +42,16 @@ ImagePreviewScreen
 
 ```
 CameraPreviewViewModel
-├─ surfaceRequest: StateFlow<SurfaceRequest?>          # CameraX preview surface
-├─ capturedImage: StateFlow<Bitmap?>                   # Full captured frame
-├─ overlayRect: StateFlow<RectF?>                      # ROI position on preview
-├─ ocrText: StateFlow<String?>                         # Extracted OCR result
+├─ surfaceRequest: StateFlow<SurfaceRequest?>            # CameraX preview surface
+├─ capturedImage: StateFlow<Bitmap?>                     # Full captured frame
+├─ overlayRect: StateFlow<RectF?>                        # ROI position on preview
+├─ ocrRawText: StateFlow<String?>                        # Raw OCR output
+├─ ocrExtractedDigits: StateFlow<String?>                # Filtered voucher digits
 │
-├─ fun takePhoto()         → sets capturedImage
-├─ fun updateOverlayRect() → sets overlayRect
-├─ fun extractText()       → runs ML Kit OCR on cropped bitmap → sets ocrText
-├─ fun clearCapturedImage()→ resets capturedImage & ocrText
+├─ fun takePhoto()              → sets capturedImage, calls processImageWithOcr()
+├─ fun updateOverlayRect()      → sets overlayRect
+├─ fun processImageWithOcr()    → runs ML Kit → stores raw text → regex → stores digits
+├─ fun clearCapturedImage()     → resets capturedImage, ocrRawText, ocrExtractedDigits
 ```
 
 ---
@@ -75,7 +76,7 @@ Constraints:
 ## OCR Pipeline (in ViewModel)
 
 ```
-fun extractText(context: Context)
+processImageWithOcr()
 │
 ├─ bitmap = _capturedImage.value ?: return
 ├─ rect = _overlayRect.value ?: return
@@ -85,16 +86,33 @@ fun extractText(context: Context)
 │
 ├─ val recognizer = TextRecognition.getClient()
 ├─ recognizer.process(image).addOnSuccessListener { result ->
-│     _ocrText.value = result.text
-│   }.addOnFailureListener { e ->
-│     Log.e("OCR", "failed", e)
-│     _ocrText.value = null
+│     _ocrRawText.value = result.text
+│     // Strip whitespace, find all digit runs of 8+ chars, pick longest
+│     _ocrExtractedDigits.value = Regex("""\d{8,}""")
+│       .findAll(result.text.replace("\\s".toRegex(), ""))
+│       .maxByOrNull { it.value.length }?.value
 │   }
 ```
 
+### Regex logic explained
+
+Input example:
+```
+2024 7570 4266 014
+ICLAUUEL
+Produtiorn ate 1022022
+```
+
+1. Remove all whitespace → `202475704266014ICLAUUELProdutiornate1022022`
+2. Find all `\d{8,}` matches → `["202475704266014", "1022022"]`
+3. Pick longest → `"202475704266014"` (15 digits, the voucher code)
+4. Short matches like `1022022` (7 digits) and `2024`, `7570`, etc. are correctly filtered out by the `{8,}` threshold
+
+This works across all three ISPs since voucher codes are always 8+ digits.
+
 ---
 
-## New Dependencies
+## Dependencies
 
 ```toml
 [versions]
@@ -109,7 +127,7 @@ mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition"
 implementation(libs.mlkit.text.recognition)
 ```
 
-> Uses `text-recognition` (bundled variant) — model is packed in the APK (~5MB). No download needed, works offline immediately from first use. Chosen over the unbundled Play Services variant because users may have slow internet (e.g. 90 KBPS).
+> Uses `text-recognition` (bundled variant) — model is packed in the APK (~5MB). No download needed, works offline immediately from first use. Chosen over the unbundled Play Services variant because users may have slow internet (e.g. 60 KBPS in Timor-Leste).
 
 ---
 
@@ -119,7 +137,13 @@ implementation(libs.mlkit.text.recognition)
 |------|--------|
 | `gradle/libs.versions.toml` | Add `mlkitTextRecognition` version + library entry |
 | `app/build.gradle.kts` | Add `implementation(libs.mlkit.text.recognition)` |
-| `ui/screens/CameraPreviewViewModel.kt` | Add `overlayRect`, `ocrText` StateFlows + `updateOverlayRect()`, `extractText()` |
-| `ui/screens/CameraPreviewContent.kt` | Add `OverlayBox` on top of `CameraXViewfinder` |
-| `ui/screens/ImagePreviewScreen.kt` | Add overlay rect display + "Extract Numbers" button + OCR text result |
+| `ui/screens/CameraPreviewViewModel.kt` | Add `overlayRect`, `ocrRawText`, `ocrExtractedDigits` StateFlows + `processImageWithOcr()` with regex |
+| `ui/screens/CameraPreviewContent.kt` | Add `OverlayBox` on top of `CameraXViewfinder`, pass OCR state to `ImagePreviewScreen` |
+| `ui/screens/ImagePreviewScreen.kt` | Show overlay rect outline + extracted voucher code + raw OCR text |
 | `ui/screens/OverlayBox.kt` | **New** — draggable/resizable selection rectangle composable |
+
+### Key implementation details
+
+- OCR runs **automatically** right after photo capture (no separate "Extract Numbers" button)
+- `clearCapturedImage()` resets both OCR state flows to `null`
+- Extracted digits shown bold/24sp in a bottom overlay panel; raw text shown smaller/dimmed below
