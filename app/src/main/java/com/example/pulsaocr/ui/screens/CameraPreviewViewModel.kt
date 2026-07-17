@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.YuvImage
 import android.util.Log
 import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -48,6 +49,11 @@ class CameraPreviewViewModel : ViewModel() {
     private val _ocrExtractedDigits = MutableStateFlow<String?>(null)
     val ocrExtractedDigits: StateFlow<String?> = _ocrExtractedDigits
 
+    private val _isFlashOn = MutableStateFlow(false)
+    val isFlashOn: StateFlow<Boolean> = _isFlashOn
+
+    private var camera: Camera? = null
+
     private val cameraPreviewUseCase = Preview.Builder()
         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .build().apply {
@@ -64,7 +70,7 @@ class CameraPreviewViewModel : ViewModel() {
     fun bindToCamera(appContext: Context, lifecycleOwner: LifecycleOwner) {
         viewModelScope.launch {
             val processCameraProvider = ProcessCameraProvider.awaitInstance(appContext)
-            processCameraProvider.bindToLifecycle(
+            camera = processCameraProvider.bindToLifecycle(
                 lifecycleOwner,
                 CameraSelector.DEFAULT_BACK_CAMERA,
                 cameraPreviewUseCase,
@@ -119,6 +125,12 @@ class CameraPreviewViewModel : ViewModel() {
         _capturedImage.value = null
         _ocrRawText.value = null
         _ocrExtractedDigits.value = null
+    }
+
+    fun toggleFlash() {
+        val newState = !_isFlashOn.value
+        _isFlashOn.value = newState
+        camera?.cameraControl?.enableTorch(newState)
     }
 
     private fun processImageWithOcr() {

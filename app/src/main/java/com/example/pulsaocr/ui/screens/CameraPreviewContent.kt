@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -77,10 +76,10 @@ fun CameraPreviewContent(
     val overlayRect by viewModel.overlayRect.collectAsStateWithLifecycle()
     val ocrRawText by viewModel.ocrRawText.collectAsStateWithLifecycle()
     val ocrExtractedDigits by viewModel.ocrExtractedDigits.collectAsStateWithLifecycle()
+    val isFlashOn by viewModel.isFlashOn.collectAsStateWithLifecycle()
 
     var previewWidth by remember { mutableIntStateOf(0) }
     var previewHeight by remember { mutableIntStateOf(0) }
-    var isFlashOn by remember { mutableStateOf(false) }
 
     LaunchedEffect(lifecycleOwner) {
         viewModel.bindToCamera(context.applicationContext, lifecycleOwner)
@@ -153,7 +152,7 @@ fun CameraPreviewContent(
                     )
                 }
                 IconButton(
-                    onClick = { isFlashOn = !isFlashOn },
+                    onClick = { viewModel.toggleFlash() },
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
