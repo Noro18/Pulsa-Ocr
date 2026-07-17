@@ -3,19 +3,28 @@ package com.example.pulsaocr.ui.screens
 import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -71,6 +80,7 @@ fun CameraPreviewContent(
 
     var previewWidth by remember { mutableIntStateOf(0) }
     var previewHeight by remember { mutableIntStateOf(0) }
+    var isFlashOn by remember { mutableStateOf(false) }
 
     LaunchedEffect(lifecycleOwner) {
         viewModel.bindToCamera(context.applicationContext, lifecycleOwner)
@@ -106,18 +116,33 @@ fun CameraPreviewContent(
                     onRectChanged = { viewModel.updateOverlayRect(it) }
                 )
             }
-            Box(
+            Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(
+                    onClick = { /* TODO: open gallery */ },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.3f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = "Open Gallery",
+                        tint = Color.White
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .size(72.dp)
                         .clip(CircleShape)
                         .background(Color.White)
-                                .clickable { viewModel.takePhoto(context, previewWidth, previewHeight) },
+                        .clickable { viewModel.takePhoto(context, previewWidth, previewHeight) },
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -125,6 +150,19 @@ fun CameraPreviewContent(
                             .size(60.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFE53935))
+                    )
+                }
+                IconButton(
+                    onClick = { isFlashOn = !isFlashOn },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.3f))
+                ) {
+                    Icon(
+                        imageVector = if (isFlashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                        contentDescription = "Toggle Flash",
+                        tint = if (isFlashOn) Color.Yellow else Color.White
                     )
                 }
             }
